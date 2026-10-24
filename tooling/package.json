@@ -1,0 +1,15 @@
+{
+  "name": "studentcare-submission-tooling",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Self-test evidence on isolated local data; not an independent partner test",
+  "scripts": {
+    "api": "node run-newman.cjs",
+    "ui": "node puppeteer.cjs"
+  },
+  "dependencies": {
+    "newman": "6.2.1",
+    "newman-reporter-htmlextra": "1.23.1",
+    "puppeteer-core": "24.38.0"
+  }
+}

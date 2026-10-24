@@ -1,3 +1,3 @@
 /* V01-V03: applied only to the explicitly selected training build. */
-@media(min-width:701px){.skin-name{max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:clip}.skin-name-button{white-space:nowrap}}
+@media(min-width:701px){.skin-name{max-width:50px;white-space:nowrap;overflow:hidden;text-overflow:clip}.skin-name-button{white-space:nowrap}}
 @media(max-width:420px){.commerce-dialog{min-width:600px}.skin-meta .rarity-badge{visibility:hidden}}

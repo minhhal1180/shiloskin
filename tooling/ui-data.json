@@ -1,0 +1,6 @@
+{
+  "member": {"username":"member01","password":"Demo@123","id":1},
+  "other": {"username":"member02","password":"Demo@123","id":2},
+  "purchase": {"listing_id":1,"item_id":5,"expected_balance":600},
+  "trade": {"give_item_id":1,"want_item_id":7,"recipient_id":2}
+}

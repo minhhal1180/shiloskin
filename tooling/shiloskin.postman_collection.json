@@ -1,0 +1,490 @@
+{
+  "info": {
+    "name": "ShiloSkin — functional API test with three CSV datasets",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Actual tests on isolated local copy of the AI-assisted ShiloSkin build. Tester: Bui Xuan Minh 23110193, owner: Nguyen Tu Lan 23110306. Not a blind assessment of an independently developed system."
+  },
+  "item": [
+    {
+      "name": "Reject unauthenticated session",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/me",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login member",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/login",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\": \"{{username}}\", \"password\": \"{{password}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('login success',()=>pm.expect(pm.response.json().ok).true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Identity and CSRF",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/me",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.environment.set('csrf',pm.response.json().csrf);",
+              "pm.test('member role',()=>pm.expect(pm.response.json().user.role).eql('MEMBER'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Browse skin catalog",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/skins",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('catalog nonempty',()=>pm.expect(pm.response.json().items.length).above(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Skin detail",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/skins/1",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('float in valid interval',()=>pm.expect(pm.response.json().item.float_value).within(0,1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Own inventory",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/inventory",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('own inventory ownership',()=>pm.expect(pm.response.json().items.every(i=>i.owner_id===1)).true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public member inventory for trade",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/inventory?user_id=2",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('target ownership',()=>pm.expect(pm.response.json().items.every(i=>i.owner_id===2)).true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Active marketplace",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/listings?status=ACTIVE",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('active status filter',()=>pm.expect(pm.response.json().items.every(i=>i.status==='ACTIVE')).true);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create listing from CSV data",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/listings",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrf}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"item_id\": \"{{item_id}}\", \"price\": \"{{price}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+              "pm.environment.set('listingId',pm.response.json().id);",
+              "pm.test('listing id assigned',()=>pm.expect(pm.response.json().id).a('number'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Find own listing",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/listings?mine=1",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('created listing exists',()=>{const id=Number(pm.environment.get('listingId'));pm.expect(pm.response.json().items.some(i=>i.id===id)).true;});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cancel own active listing",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/listings/{{listingId}}/cancel",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrf}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cancelled listing persists",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/listings?mine=1",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('cancelled state',()=>pm.expect(pm.response.json().items.find(i=>i.id===Number(pm.environment.get('listingId'))).status).eql('CANCELLED'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid item ID",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/listings",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrf}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"item_id\": \"bad-id\", \"price\": 350}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown catalog detail returns 404",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/skins/999999",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404',()=>pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Member cannot access user administration",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/users",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read trade offers",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/trades",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('trade list',()=>pm.expect(pm.response.json().items).an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read history",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/history",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('history list',()=>pm.expect(pm.response.json().items).an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read private notifications",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/notifications",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+              "pm.test('notification list',()=>pm.expect(pm.response.json().items).an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/api/logout",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-CSRF-Token",
+            "value": "{{csrf}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Session revoked after logout",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/me",
+        "header": []
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

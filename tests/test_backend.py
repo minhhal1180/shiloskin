@@ -125,6 +125,26 @@ class BackendGuards(unittest.TestCase):
         self.assertEqual(self.post("member01", f"/notifications/{wrong_id}/read").status_code, 404)
         self.assertTrue(all(row["recipient_id"] == 1 for row in self.get("member01", "/notifications").json["items"]))
 
+    def test_catalog_filters_bind_query_values(self):
+        for path, field, expected in [
+            ("/skins?q=redline", "name", "Redline"),
+            ("/skins?rarity=Covert", "rarity", "Covert"),
+            ("/skins?weapon=AK-47", "weapon", "AK-47"),
+        ]:
+            with self.subTest(path=path):
+                response = self.get("member01", path)
+                self.assertEqual(response.status_code, 200)
+                self.assertTrue(response.json["items"])
+                self.assertTrue(all(item[field] == expected for item in response.json["items"]))
+
+    def test_partial_catalog_patch_preserves_active(self):
+        client, csrf = self.login("admin")
+        response = client.patch("/api/skins/1", json={"reference_price": 300}, headers={"X-CSRF-Token": csrf})
+        self.assertEqual(response.status_code, 200)
+        item = self.get("admin", "/skins/1").json["item"]
+        self.assertEqual(item["reference_price"], 300)
+        self.assertEqual(item["active"], 1)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
