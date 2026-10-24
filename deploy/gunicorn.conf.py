@@ -1,0 +1,11 @@
+bind = "127.0.0.1:8002"
+workers = 1
+worker_class = "gthread"
+threads = 2
+timeout = 60
+graceful_timeout = 30
+accesslog = "-"
+errorlog = "-"
+capture_output = True
+forwarded_allow_ips = "127.0.0.1"
+control_socket_disable = True

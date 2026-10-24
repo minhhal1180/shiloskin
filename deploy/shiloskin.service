@@ -1,0 +1,24 @@
+[Unit]
+Description=ShiloSkin CS2 demo skin inspection and trading
+After=network.target
+
+[Service]
+Type=simple
+User=student
+Group=student
+WorkingDirectory=/home/student/shiloskin
+EnvironmentFile=/etc/shiloskin.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/student/shiloskin/.venv/bin/gunicorn --config deploy/gunicorn.conf.py app:create_app()
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=40
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/student/shiloskin/instance
+
+[Install]
+WantedBy=multi-user.target
